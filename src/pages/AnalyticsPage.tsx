@@ -1,0 +1,17 @@
+import { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart, Bar, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import { getComments, getSprints, getTasks } from '../api/mockDataService';
+import { useBoardStore } from '../stores/boardStore';
+
+const COLORS=['#6366f1','#f59e0b','#0ea5e9','#10b981'];
+export default function AnalyticsPage(){
+ const tq=useQuery({queryKey:['tasks'],queryFn:getTasks});const cq=useQuery({queryKey:['comments'],queryFn:getComments});const sq=useQuery({queryKey:['sprints'],queryFn:getSprints});const hydrate=useBoardStore(s=>s.hydrate);const tasks=useBoardStore(s=>s.tasks);
+ useEffect(()=>{if(tq.data&&cq.data)hydrate(tq.data,cq.data)},[tq.data,cq.data,hydrate]);
+ const status=useMemo(()=>['backlog','in-progress','review','done'].map(name=>({name:name.replace('-',' '),value:tasks.filter(t=>t.status===name).length})),[tasks]);
+ const priorities=useMemo(()=>['low','medium','high'].map(name=>({name,value:tasks.filter(t=>t.priority===name).length})),[tasks]);
+ const velocity=useMemo(()=>(sq.data??[]).map(s=>({name:s.name,completed:tasks.filter(t=>t.sprintId===s.id&&t.status==='done').length})),[sq.data,tasks]);
+ const trend=useMemo(()=>{const map=new Map<string,number>();tasks.filter(t=>t.completedAt).forEach(t=>{const d=(t.completedAt as string).slice(0,10);map.set(d,(map.get(d)??0)+1)});let total=0;return [...map.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date:date.slice(5),completed:(total+=count)}));},[tasks]);
+ const Card=({title,children}:{title:string;children:React.ReactNode})=><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900"><h2 className="mb-4 font-bold">{title}</h2><div className="h-72">{children}</div></div>;
+ return <div><div className="mb-6"><p className="text-sm font-semibold text-brand-600">Insights</p><h1 className="text-2xl font-extrabold">Sprint analytics</h1><p className="mt-1 text-sm text-slate-500">Charts recalculate automatically when board data changes.</p></div><div className="grid gap-4 xl:grid-cols-2"><Card title="Sprint velocity"><ResponsiveContainer width="100%" height="100%"><BarChart data={velocity}><CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="name"/><YAxis allowDecimals={false}/><Tooltip/><Bar dataKey="completed" fill="#6366f1" animationDuration={500}/></BarChart></ResponsiveContainer></Card><Card title="Task status"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={status} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} animationDuration={500}>{status.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip/><Legend/></PieChart></ResponsiveContainer></Card><Card title="Priority breakdown"><ResponsiveContainer width="100%" height="100%"><BarChart data={priorities}><CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="name"/><YAxis allowDecimals={false}/><Tooltip/><Bar dataKey="value" fill="#0ea5e9" animationDuration={500}/></BarChart></ResponsiveContainer></Card><Card title="Completion trend"><ResponsiveContainer width="100%" height="100%"><LineChart data={trend}><CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date"/><YAxis allowDecimals={false}/><Tooltip/><Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={3} animationDuration={500}/></LineChart></ResponsiveContainer></Card></div></div>;
+}

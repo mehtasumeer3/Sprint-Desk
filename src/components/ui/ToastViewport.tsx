@@ -1,0 +1,4 @@
+import { useEffect } from 'react';
+import { useToastStore } from '../../stores/toastStore';
+function ToastItem({ id, message, tone }: { id: number; message: string; tone?: 'success' | 'error' | 'info' }) { const remove = useToastStore((s)=>s.remove); useEffect(()=>{ const timer=setTimeout(()=>remove(id),3500); return ()=>clearTimeout(timer);},[id,remove]); const toneClass = tone === 'error' ? 'border-rose-300' : tone === 'success' ? 'border-emerald-300' : 'border-slate-200'; return <div className={`rounded-xl border ${toneClass} bg-white px-4 py-3 text-sm text-slate-800 shadow-lg dark:bg-slate-900 dark:text-white`} role="status">{message}</div>; }
+export function ToastViewport(){ const toasts=useToastStore((s)=>s.toasts); return <div className="fixed bottom-4 right-4 z-[80] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite">{toasts.map((t)=><ToastItem key={t.id} {...t}/>)}</div>; }

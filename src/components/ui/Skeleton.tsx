@@ -1,0 +1,2 @@
+export function Skeleton({ className = '' }: { className?: string }) { return <div aria-hidden="true" className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />; }
+export function FullScreenLoader() { return <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950"><div className="text-center"><div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-brand-600"/><p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Validating your session…</p></div></div>; }
