@@ -1,11 +1,18 @@
-import type { MockData } from '../types';
+import type { MockData } from "../types";
 
 let cache: MockData | null = null;
 
+const MOCK_DATA_URL = `${import.meta.env.BASE_URL}mock-data.json`;
+
 export async function getMockData(): Promise<MockData> {
   if (cache) return cache;
-  const response = await fetch('/mock-data.json');
-  if (!response.ok) throw new Error('Unable to load SprintDesk data.');
+
+  const response = await fetch(MOCK_DATA_URL);
+
+  if (!response.ok) {
+    throw new Error("Unable to load SprintDesk data.");
+  }
+
   cache = (await response.json()) as MockData;
   return cache;
 }
